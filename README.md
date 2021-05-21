@@ -26,3 +26,5 @@ state. This attribute contains information where our application is.
 For example checkout example application
 
 **NOTE:** If you are loading builder number using file make sure to include lib path inside your __pubspec.yaml__
+
+**NOTE:** Make sure that you initialize lognito using `Lognito.init()` before using this utility.
