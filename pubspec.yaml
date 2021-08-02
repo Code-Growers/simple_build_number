@@ -13,7 +13,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_bloc: 7.0.0
+  flutter_bloc: 7.1.0
   localstorage: 4.0.0+1
   equatable: 2.0.3
   lognito:
