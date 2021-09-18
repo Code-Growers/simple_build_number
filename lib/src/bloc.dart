@@ -25,7 +25,12 @@ class BuildNumberBloc extends Bloc<BuildNumberEvent, BuildNumberState> {
       if (argsAppVersion.isEmpty) {
         yield* _yieldDefaultPristineState(BuildLoadType.args);
       } else {
-        yield* _yieldLoadedStateForType(BuildLoadType.args, argsAppVersion);
+        if (argsAppVersion == kAppVersionDefaultValue &&
+            kAppVersionDefaultValue != defaultVersion) {
+          yield* _yieldLoadedStateForType(BuildLoadType.args, defaultVersion);
+        } else {
+          yield* _yieldLoadedStateForType(BuildLoadType.args, argsAppVersion);
+        }
       }
     }
     if (event is BuildNumberFileLoadEvent) {
