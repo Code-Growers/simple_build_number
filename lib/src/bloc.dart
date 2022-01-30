@@ -17,51 +17,62 @@ class BuildNumberBloc extends Bloc<BuildNumberEvent, BuildNumberState> {
 
   BuildNumberBloc(this.buildNumberRepository,
       [this.defaultVersion = kAppVersionDefaultValue])
-      : super(BuildNumberEmptyState());
+      : super(BuildNumberEmptyState()) {
+    on<BuildNumberArgumentsLoadEvent>(_handleArgumentsLoadEvent);
+    on<BuildNumberFileLoadEvent>(_handleFileLoadEvent);
+    on<BuildNumberSetStateEvent>(_handleBuildNumberSetStateEvent);
+  }
 
-  @override
-  Stream<BuildNumberState> mapEventToState(BuildNumberEvent event) async* {
-    if (event is BuildNumberArgumentsLoadEvent) {
-      if (argsAppVersion.isEmpty) {
-        yield* _yieldDefaultPristineState(BuildLoadType.args);
+  void _handleArgumentsLoadEvent(BuildNumberArgumentsLoadEvent event,
+      Emitter<BuildNumberState> emit) async {
+    if (argsAppVersion.isEmpty) {
+      emit(await _yieldDefaultPristineState(BuildLoadType.args));
+    } else {
+      if (argsAppVersion == kAppVersionDefaultValue &&
+          kAppVersionDefaultValue != defaultVersion) {
+        emit(
+            await _yieldLoadedStateForType(BuildLoadType.args, defaultVersion));
       } else {
-        if (argsAppVersion == kAppVersionDefaultValue &&
-            kAppVersionDefaultValue != defaultVersion) {
-          yield* _yieldLoadedStateForType(BuildLoadType.args, defaultVersion);
-        } else {
-          yield* _yieldLoadedStateForType(BuildLoadType.args, argsAppVersion);
-        }
+        emit(
+            await _yieldLoadedStateForType(BuildLoadType.args, argsAppVersion));
       }
     }
-    if (event is BuildNumberFileLoadEvent) {
-      final String? fileVersionNumber =
-          await _loadFilerVersionNumber(event.filePath);
-      if (fileVersionNumber == null || fileVersionNumber.isEmpty) {
-        yield* _yieldDefaultPristineState(BuildLoadType.file);
-      } else {
-        yield* _yieldLoadedStateForType(BuildLoadType.file, fileVersionNumber);
-      }
+  }
+
+  void _handleFileLoadEvent(
+      BuildNumberFileLoadEvent event, Emitter<BuildNumberState> emit) async {
+    final String? fileVersionNumber =
+        await _loadFilerVersionNumber(event.filePath);
+    if (fileVersionNumber == null || fileVersionNumber.isEmpty) {
+      emit(await _yieldDefaultPristineState(BuildLoadType.file));
+    } else {
+      emit(await _yieldLoadedStateForType(
+          BuildLoadType.file, fileVersionNumber));
     }
-    if (event is BuildNumberSetStateEvent && state is BuildNumberLoadedState) {
+  }
+
+  void _handleBuildNumberSetStateEvent(
+      BuildNumberSetStateEvent event, Emitter<BuildNumberState> emit) async {
+    if (state is BuildNumberLoadedState) {
       final BuildNumberLoadedState currentState =
           state as BuildNumberLoadedState;
-      yield currentState.copyWith(state: event.state, version: event.version);
+      emit(currentState.copyWith(state: event.state, version: event.version));
     }
   }
 
-  Stream<BuildNumberState> _yieldLoadedStateForType(
-      BuildLoadType loadType, String? resolvedVersion) async* {
+  Future<BuildNumberState> _yieldLoadedStateForType(
+      BuildLoadType loadType, String? resolvedVersion) async {
     final BuildState buildState = await _getBuildState(resolvedVersion);
     _logLoadedBuildNumber(loadType, buildState);
-    yield BuildNumberLoadedState(state: buildState, version: resolvedVersion);
     buildNumberRepository.setVersion(resolvedVersion);
+    return BuildNumberLoadedState(state: buildState, version: resolvedVersion);
   }
 
-  Stream<BuildNumberState> _yieldDefaultPristineState(
-      BuildLoadType loadType) async* {
+  Future<BuildNumberState> _yieldDefaultPristineState(
+      BuildLoadType loadType) async {
     logger.i('${describeEnum(loadType)} build number value is nil or empty.');
     logger.i('Setting default version pristine state.');
-    yield BuildNumberLoadedState(
+    return BuildNumberLoadedState(
         state: BuildState.pristine, version: defaultVersion);
   }
 

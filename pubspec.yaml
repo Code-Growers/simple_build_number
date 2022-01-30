@@ -1,7 +1,5 @@
 name: simple_build_number
 description: Simple BLoC that will help you with build number and react to their changes
-authors:
-  - CodeGrowers s.r.o.
 version: 0.0.1
 homepage: https://github.com/Code-Growers/simple_build_number
 
@@ -13,7 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_bloc: 7.1.0
+  flutter_bloc: 8.0.1
   localstorage: 4.0.0+1
   equatable: 2.0.3
   lognito:
